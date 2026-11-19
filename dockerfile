@@ -3,7 +3,6 @@ FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
 COPY pom.xml mvnw mvnw.cmd ./
-COPY .mvn .mvn
 RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
 
 COPY src ./src
