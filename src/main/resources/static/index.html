@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MarketPlaza - Marketplace de Artículos Usados</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            fb: {
+              bg: '#F0F2F5',
+              blue: '#1877F2',
+              blueHover: '#166FE5',
+              lightBlue: '#E7F3FF',
+              text: '#050505',
+              secondary: '#65676B',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: #F0F2F5;
+      color: #050505;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .animate-modal {
+      animation: modalPop 0.18s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-[#F0F2F5] text-[#050505] antialiased min-h-screen flex flex-col selection:bg-[#1877F2] selection:text-white">
+
+<!-- BANNER SUPERIOR DE ANUNCIOS -->
+<div id="top-announcement-bar" class="bg-gradient-to-r from-[#1877F2] via-blue-600 to-indigo-700 text-white text-xs sm:text-sm py-2 px-4 text-center font-medium shadow-xs">
+  <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
+    <i class="fa-solid fa-bullhorn text-blue-200"></i>
+    <span id="announcement-text">¡Bienvenido a MarketPlaza! Regístrate gratis, publica tus artículos usados y compra cerca de ti.</span>
+  </div>
+</div>
+
+<!-- BARRA DE NAVEGACIÓN PRINCIPAL -->
+<header class="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-xs">
+  <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+    <div class="flex flex-wrap items-center justify-between gap-3 py-2.5 sm:py-3">
+
+      <!-- Logo y Nombre de la Tienda -->
+      <div class="flex items-center gap-3 cursor-pointer select-none" onclick="navigateTo('marketplace')">
+        <div class="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center text-white shadow-sm shrink-0">
+          <i class="fa-solid fa-store text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 id="header-store-name" class="text-lg sm:text-xl font-extrabold tracking-tight text-[#050505] leading-none">
+              MarketPlaza
+            </h1>
+            <span class="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#E7F3FF] text-[#1877F2]">
+                Marketplace
+              </span>
+          </div>
+          <p id="header-store-tagline" class="text-[11px] text-[#65676B] hidden sm:block mt-0.5">
+            Compra y vende artículos usados cerca de ti
+          </p>
+        </div>
+      </div>
+
+      <!-- Buscador Rápido -->
+      <div id="header-search-container" class="order-3 md:order-2 w-full md:w-auto md:flex-1 md:max-w-md lg:max-w-lg">
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#65676B]">
+              <i class="fa-solid fa-magnifying-glass text-sm"></i>
+            </span>
+          <input
+                  type="text"
+                  id="top-search-input"
+                  placeholder="Buscar en Marketplace..."
+                  oninput="syncSearchInputs(this.value)"
+                  class="w-full pl-10 pr-9 py-2 bg-[#F0F2F5] hover:bg-slate-200/75 focus:bg-white text-sm text-[#050505] placeholder-[#65676B] rounded-full border border-transparent focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none transition-all"
+          />
+          <button
+                  id="top-clear-search"
+                  onclick="clearAllFilters()"
+                  title="Limpiar búsqueda"
+                  class="hidden absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+          >
+            <i class="fa-solid fa-circle-xmark text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Controles de Usuario -->
+      <div class="order-2 md:order-3 flex items-center gap-2 sm:gap-2.5">
+        <button
+                onclick="handlePublishClick()"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#1877F2] hover:bg-[#166FE5] active:scale-[0.98] text-white text-xs sm:text-sm font-semibold shadow-xs transition-all cursor-pointer"
+        >
+          <i class="fa-solid fa-plus"></i>
+          <span>Publicar artículo</span>
+        </button>
+
+        <div id="navbar-auth-area" class="flex items-center gap-2"></div>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- CONTENEDOR PRINCIPAL -->
+<main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-6">
+
+  <!-- VISTA 1: MARKETPLACE -->
+  <section id="view-marketplace" class="flex flex-col lg:flex-row gap-6 items-start">
+
+    <!-- Sidebar Izquierdo -->
+    <aside class="w-full lg:w-72 shrink-0 lg:sticky lg:top-20 space-y-4">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-3.5">
+          <h2 class="text-base font-bold text-[#050505] flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-[#1877F2] text-sm"></i>
+            <span>Filtros</span>
+          </h2>
+          <button onclick="clearAllFilters()" class="text-xs font-semibold text-[#1877F2] hover:underline cursor-pointer">
+            Limpiar todo
+          </button>
+        </div>
+
+        <div class="mb-4">
+          <label for="sidebar-search-input" class="block text-xs font-semibold text-[#65676B] mb-1.5">
+            Palabra clave o ciudad
+          </label>
+          <div class="relative">
+            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input
+                    type="text"
+                    id="sidebar-search-input"
+                    placeholder="Ej. iPhone, bicicleta, Guayaquil..."
+                    oninput="syncSearchInputs(this.value)"
+                    class="w-full pl-8 pr-3 py-2 bg-[#F0F2F5] focus:bg-white rounded-xl text-xs sm:text-sm border border-transparent focus:border-[#1877F2] outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <div class="mb-4 pt-3.5 border-t border-slate-100">
+          <label class="block text-xs font-semibold text-[#65676B] mb-2">Rango de precios (USD)</label>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="relative">
+              <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">$</span>
+              <input
+                      type="number"
+                      id="filter-min-price"
+                      min="0"
+                      placeholder="Mín"
+                      oninput="updatePriceFilter()"
+                      class="w-full pl-6 pr-2 py-1.5 bg-[#F0F2F5] focus:bg-white rounded-xl text-xs sm:text-sm border border-transparent focus:border-[#1877F2] outline-none"
+              />
+            </div>
+            <div class="relative">
+              <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">$</span>
+              <input
+                      type="number"
+                      id="filter-max-price"
+                      min="0"
+                      placeholder="Máx"
+                      oninput="updatePriceFilter()"
+                      class="w-full pl-6 pr-2 py-1.5 bg-[#F0F2F5] focus:bg-white rounded-xl text-xs sm:text-sm border border-transparent focus:border-[#1877F2] outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4 pt-3.5 border-t border-slate-100">
+          <label class="block text-xs font-semibold text-[#65676B] mb-2">Categorías</label>
+          <div id="category-filter-list" class="flex lg:flex-col gap-1.5 overflow-x-auto no-scrollbar pb-1 lg:pb-0"></div>
+        </div>
+
+        <div class="mb-4 pt-3.5 border-t border-slate-100">
+          <label class="block text-xs font-semibold text-[#65676B] mb-2">Estado del artículo</label>
+          <div id="condition-filter-list" class="flex flex-wrap lg:flex-col gap-1.5"></div>
+        </div>
+
+        <div class="pt-3.5 border-t border-slate-100 space-y-2.5">
+          <label class="flex items-center gap-2.5 cursor-pointer select-none">
+            <input
+                    type="checkbox"
+                    id="filter-show-sold"
+                    checked
+                    onchange="toggleShowSold(this.checked)"
+                    class="w-4 h-4 rounded text-[#1877F2] border-slate-300 focus:ring-[#1877F2]"
+            />
+            <span class="text-xs font-medium text-slate-700">Mostrar artículos vendidos</span>
+          </label>
+
+          <label id="filter-only-mine-wrapper" class="hidden items-center gap-2.5 cursor-pointer select-none">
+            <input
+                    type="checkbox"
+                    id="filter-only-mine"
+                    onchange="toggleOnlyMine(this.checked)"
+                    class="w-4 h-4 rounded text-[#1877F2] border-slate-300 focus:ring-[#1877F2]"
+            />
+            <span class="text-xs font-medium text-slate-700">Solo mis publicaciones</span>
+          </label>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Área Principal del Catálogo -->
+    <div class="flex-1 min-w-0 w-full">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs px-4 py-3 mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 id="catalog-title" class="text-base sm:text-lg font-bold text-[#050505]">Sugerencias de hoy</h2>
+          <p id="catalog-subtitle" class="text-xs text-[#65676B]">Cargando publicaciones desde Oracle...</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label for="sort-products-select" class="text-xs font-medium text-[#65676B] hidden sm:inline">Ordenar por:</label>
+          <select
+                  id="sort-products-select"
+                  onchange="changeSortOrder(this.value)"
+                  class="text-xs sm:text-sm bg-[#F0F2F5] border border-transparent focus:border-[#1877F2] rounded-xl px-3 py-1.5 text-[#050505] font-medium outline-none cursor-pointer"
+          >
+            <option value="newest">Más recientes</option>
+            <option value="price-asc">Precio: menor a mayor</option>
+            <option value="price-desc">Precio: mayor a menor</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ESTADO VACÍO INICIAL -->
+      <div id="marketplace-zero-state" class="hidden bg-white rounded-2xl border border-slate-200/90 shadow-xs p-8 sm:p-14 text-center">
+        <div class="w-20 h-20 rounded-full bg-[#E7F3FF] text-[#1877F2] mx-auto flex items-center justify-center mb-5">
+          <i class="fa-solid fa-box-open text-3xl"></i>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-extrabold text-[#050505] mb-2">
+          Aún no hay artículos en venta. ¡Sé el primero en publicar tu producto!
+        </h3>
+        <p class="text-sm text-[#65676B] max-w-md mx-auto mb-6 leading-relaxed">
+          El catálogo está conectado a Oracle 21c XE y listo para recibir publicaciones reales. Crea tu cuenta o inicia sesión para publicar.
+        </p>
+        <button
+                onclick="handlePublishClick()"
+                class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#1877F2] hover:bg-[#166FE5] text-white text-sm font-bold shadow-sm transition-all cursor-pointer"
+        >
+          <i class="fa-solid fa-plus"></i>
+          <span>+ Publicar primer artículo</span>
+        </button>
+      </div>
+
+      <!-- ESTADO VACÍO POR FILTROS -->
+      <div id="marketplace-no-results-state" class="hidden bg-white rounded-2xl border border-slate-200/90 shadow-xs p-10 text-center">
+        <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-4">
+          <i class="fa-solid fa-magnifying-glass text-2xl"></i>
+        </div>
+        <h3 class="text-base font-bold text-[#050505] mb-1">No encontramos coincidencias</h3>
+        <p class="text-xs sm:text-sm text-[#65676B] mb-4 max-w-md mx-auto">
+          Ningún artículo coincide con los filtros o el rango de precio seleccionado.
+        </p>
+        <button
+                onclick="clearAllFilters()"
+                class="px-4 py-2 rounded-full bg-[#E7F3FF] hover:bg-blue-100 text-[#1877F2] text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+        >
+          Restablecer filtros
+        </button>
+      </div>
+
+      <!-- Cuadrícula de Productos -->
+      <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5"></div>
+    </div>
+  </section>
+
+  <!-- VISTA 2: PANEL DE SUPERADMINISTRADOR -->
+  <section id="view-superadmin" class="hidden space-y-6">
+
+    <div class="bg-slate-900 text-white rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-1.5">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#1877F2]/30 text-blue-300 border border-blue-400/30">
+              <i class="fa-solid fa-shield-halved"></i> Superadministrador Verificado
+            </span>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight">
+          Panel de Control — <span id="admin-header-store-name" class="text-blue-400">MarketPlaza</span>
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-300 mt-1">
+          Gestiona usuarios en Oracle, modera publicaciones, analiza el margen de vendidos y configura la plataforma.
+        </p>
+      </div>
+
+      <button
+              onclick="navigateTo('marketplace')"
+              class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-white flex items-center gap-1.5 transition-colors cursor-pointer self-start"
+      >
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Volver a la Tienda</span>
+      </button>
+    </div>
+
+    <!-- 4 Tarjetas KPI -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-[#65676B]">Usuarios Registrados</span>
+          <div class="w-9 h-9 rounded-xl bg-[#E7F3FF] text-[#1877F2] flex items-center justify-center">
+            <i class="fa-solid fa-users"></i>
+          </div>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span id="kpi-users-total" class="text-2xl sm:text-3xl font-extrabold text-[#050505]">0</span>
+          <span id="kpi-users-active" class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">0 activos</span>
+        </div>
+        <p id="kpi-users-detail" class="text-xs text-[#65676B] mt-2">Persistidos en Oracle 21c XE</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-[#65676B]">Publicaciones Activas</span>
+          <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <i class="fa-solid fa-tags"></i>
+          </div>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span id="kpi-listings-active" class="text-2xl sm:text-3xl font-extrabold text-[#050505]">0</span>
+          <span id="kpi-listings-total" class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">de 0 totales</span>
+        </div>
+        <p id="kpi-listings-value" class="text-xs text-[#65676B] mt-2">Valor activo en catálogo: $0.00</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-[#65676B]">Artículos Vendidos</span>
+          <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <i class="fa-solid fa-bag-shopping"></i>
+          </div>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span id="kpi-sold-total" class="text-2xl sm:text-3xl font-extrabold text-[#050505]">0</span>
+          <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Ventas cerradas</span>
+        </div>
+        <p id="kpi-sold-gmv" class="text-xs text-[#65676B] mt-2">Volumen bruto vendido: $0.00</p>
+      </div>
+
+      <div class="bg-gradient-to-br from-[#1877F2] to-indigo-700 text-white rounded-2xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-blue-100">Margen de Vendidos</span>
+          <div class="w-9 h-9 rounded-xl bg-white/15 text-white flex items-center justify-center">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+        </div>
+        <div class="flex items-baseline justify-between gap-2">
+          <span id="kpi-margin-net" class="text-2xl sm:text-3xl font-extrabold text-white">$0.00</span>
+          <span id="kpi-conversion-pct" class="text-xs font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">0.0% conv.</span>
+        </div>
+        <p id="kpi-margin-rate-label" class="text-xs text-blue-100 mt-2">Comisión configurada: 5%</p>
+      </div>
+    </div>
+
+    <!-- Pestañas del Superadministrador -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+      <div class="border-b border-slate-200 px-3 sm:px-6 pt-3 flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar">
+        <button
+                onclick="switchAdminTab('summary')"
+                id="admin-tab-btn-summary"
+                class="px-3.5 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-[#1877F2] text-[#1877F2] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5"
+        >
+          <i class="fa-solid fa-chart-column"></i>
+          <span>Resumen y Margen de Vendidos</span>
+        </button>
+
+        <button
+                onclick="switchAdminTab('users')"
+                id="admin-tab-btn-users"
+                class="px-3.5 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-[#65676B] hover:text-[#050505] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5"
+        >
+          <i class="fa-solid fa-users"></i>
+          <span>Usuarios Registrados</span>
+        </button>
+
+        <button
+                onclick="switchAdminTab('listings')"
+                id="admin-tab-btn-listings"
+                class="px-3.5 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-[#65676B] hover:text-[#050505] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5"
+        >
+          <i class="fa-solid fa-list-check"></i>
+          <span>Publicaciones y Moderación</span>
+        </button>
+
+        <button
+                onclick="switchAdminTab('settings')"
+                id="admin-tab-btn-settings"
+                class="px-3.5 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-[#65676B] hover:text-[#050505] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5"
+        >
+          <i class="fa-solid fa-gear"></i>
+          <span>Configuración de la Página</span>
+        </button>
+      </div>
+
+      <!-- PESTAÑA 1: RESUMEN Y MARGEN -->
+      <div id="admin-panel-summary" class="p-4 sm:p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 bg-[#F0F2F5]/60 rounded-2xl border border-slate-200/80 p-5">
+            <div class="mb-4">
+              <h3 class="text-base font-bold text-[#050505]">Artículos Activos vs. Vendidos por Categoría</h3>
+              <p class="text-xs text-[#65676B]">Datos en tiempo real desde Oracle Database 21c XE</p>
+            </div>
+            <div class="relative h-64 sm:h-72 w-full bg-white rounded-xl p-3 border border-slate-200/70">
+              <canvas id="category-performance-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-[#F0F2F5]/60 rounded-2xl border border-slate-200/80 p-5 flex flex-col justify-between">
+            <div>
+              <h3 class="text-base font-bold text-[#050505] mb-1">Cálculo de Margen Neto</h3>
+              <p class="text-xs text-[#65676B] mb-4">Rentabilidad acumulada sobre operaciones cerradas</p>
+
+              <div class="space-y-3">
+                <div class="bg-white p-3.5 rounded-xl border border-slate-200/70 flex items-center justify-between">
+                  <span class="text-xs font-medium text-slate-600">Tasa de conversión</span>
+                  <span id="summary-conversion-rate" class="text-sm font-bold text-[#1877F2]">0.0%</span>
+                </div>
+                <div class="bg-white p-3.5 rounded-xl border border-slate-200/70 flex items-center justify-between">
+                  <span class="text-xs font-medium text-slate-600">Volumen Bruto Vendido (GMV)</span>
+                  <span id="summary-gross-volume" class="text-sm font-bold text-[#050505]">$0.00</span>
+                </div>
+                <div class="bg-white p-3.5 rounded-xl border border-slate-200/70 flex items-center justify-between">
+                  <span class="text-xs font-medium text-slate-600">Comisión actual de plataforma</span>
+                  <span id="summary-commission-pct" class="text-sm font-bold text-indigo-600">5%</span>
+                </div>
+                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex items-center justify-between">
+                  <div>
+                    <span class="block text-xs font-bold text-emerald-950">Ganancia Neta Superadmin</span>
+                    <span class="text-[11px] text-emerald-700">Margen total retenido</span>
+                  </div>
+                  <span id="summary-net-profit" class="text-lg font-extrabold text-emerald-700">$0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 2: USUARIOS -->
+      <div id="admin-panel-users" class="hidden p-4 sm:p-6 space-y-4">
+        <div>
+          <h3 class="text-base font-bold text-[#050505]">Usuarios Registrados en Oracle</h3>
+          <p class="text-xs text-[#65676B]">Supervisa las cuentas creadas y suspende o reactiva el acceso.</p>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <table class="w-full text-left border-collapse">
+            <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-[#65676B]">
+              <th class="py-3 px-4">Usuario</th>
+              <th class="py-3 px-4">Correo</th>
+              <th class="py-3 px-4">Rol</th>
+              <th class="py-3 px-4 text-center">Publicaciones</th>
+              <th class="py-3 px-4">Estado</th>
+              <th class="py-3 px-4 text-right">Acciones</th>
+            </tr>
+            </thead>
+            <tbody id="admin-users-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 3: PUBLICACIONES -->
+      <div id="admin-panel-listings" class="hidden p-4 sm:p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-bold text-[#050505]">Publicaciones y Moderación</h3>
+            <p class="text-xs text-[#65676B]">Controla todos los artículos publicados en Oracle, marca ventas o elimina contenido.</p>
+          </div>
+
+          <div class="inline-flex items-center bg-[#F0F2F5] p-1 rounded-xl self-start">
+            <button onclick="setAdminListingsFilter('all')" id="mod-filter-all" class="px-3 py-1 rounded-lg text-xs font-semibold bg-white text-[#050505] shadow-xs cursor-pointer">
+              Todos
+            </button>
+            <button onclick="setAdminListingsFilter('active')" id="mod-filter-active" class="px-3 py-1 rounded-lg text-xs font-semibold text-[#65676B] hover:text-[#050505] cursor-pointer">
+              Activos
+            </button>
+            <button onclick="setAdminListingsFilter('sold')" id="mod-filter-sold" class="px-3 py-1 rounded-lg text-xs font-semibold text-[#65676B] hover:text-[#050505] cursor-pointer">
+              Vendidos
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <table class="w-full text-left border-collapse">
+            <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-[#65676B]">
+              <th class="py-3 px-4">Artículo</th>
+              <th class="py-3 px-4">Vendedor</th>
+              <th class="py-3 px-4">Precio</th>
+              <th class="py-3 px-4">Comisión Est.</th>
+              <th class="py-3 px-4">Estado</th>
+              <th class="py-3 px-4 text-right">Acciones</th>
+            </tr>
+            </thead>
+            <tbody id="admin-listings-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 4: CONFIGURACIÓN -->
+      <div id="admin-panel-settings" class="hidden p-4 sm:p-6">
+        <div class="max-w-2xl">
+          <h3 class="text-base font-bold text-[#050505] mb-1">Configuración General de la Tienda</h3>
+          <p class="text-xs text-[#65676B] mb-6">
+            Guarda los cambios directamente en la tabla CONFIGURACION de Oracle.
+          </p>
+
+          <form onsubmit="handleSaveSettings(event)" class="space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="set-store-name" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Nombre de la Tienda
+                </label>
+                <input
+                        type="text"
+                        id="set-store-name"
+                        required
+                        maxlength="50"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none"
+                />
+              </div>
+
+              <div>
+                <label for="set-store-tagline" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Subtítulo de Cabecera
+                </label>
+                <input
+                        type="text"
+                        id="set-store-tagline"
+                        maxlength="65"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none"
+                />
+              </div>
+            </div>
+
+            <div class="bg-[#F0F2F5]/70 p-4 rounded-xl border border-slate-200/80">
+              <div class="flex items-center justify-between mb-2">
+                <label for="set-commission-rate" class="text-xs font-semibold text-slate-700">
+                  Porcentaje de Comisión por Venta (%)
+                </label>
+                <span id="set-commission-badge" class="px-2.5 py-0.5 rounded-lg bg-[#1877F2] text-white text-xs font-bold">
+                    5%
+                  </span>
+              </div>
+              <input
+                      type="range"
+                      id="set-commission-rate"
+                      min="1"
+                      max="40"
+                      step="1"
+                      value="5"
+                      oninput="document.getElementById('set-commission-badge').textContent = this.value + '%'"
+                      class="w-full accent-[#1877F2] cursor-pointer"
+              />
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <label for="set-announcement-text" class="text-xs font-semibold text-slate-700">
+                  Texto del Banner Superior de Anuncios
+                </label>
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                          type="checkbox"
+                          id="set-show-announcement"
+                          checked
+                          class="w-4 h-4 rounded text-[#1877F2] border-slate-300 focus:ring-[#1877F2]"
+                  />
+                  <span class="text-xs font-medium text-slate-700">Mostrar banner</span>
+                </label>
+              </div>
+              <input
+                      type="text"
+                      id="set-announcement-text"
+                      maxlength="140"
+                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none"
+              />
+            </div>
+
+            <div class="bg-[#F0F2F5]/70 p-4 rounded-xl border border-slate-200/80 flex items-center justify-between gap-4">
+              <div>
+                <h4 class="text-sm font-semibold text-[#050505]">Habilitar nuevos registros de usuarios</h4>
+                <p class="text-xs text-[#65676B]">Controla si nuevos visitantes pueden crear cuentas desde el modal.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" id="set-allow-registration" checked class="sr-only peer" />
+                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1877F2]"></div>
+              </label>
+            </div>
+
+            <div class="pt-2">
+              <button
+                      type="submit"
+                      class="px-5 py-2.5 rounded-xl bg-[#1877F2] hover:bg-[#166FE5] text-white text-sm font-semibold shadow-xs transition-all cursor-pointer"
+              >
+                Guardar Configuración en Oracle
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- MODAL 1: AUTENTICACIÓN -->
+<div id="auth-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4" onclick="closeModalBackdrop(event, 'auth-modal')">
+  <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 animate-modal">
+    <div class="px-5 pt-5 pb-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-full bg-[#1877F2] text-white flex items-center justify-center">
+          <i class="fa-solid fa-store"></i>
+        </div>
+        <div>
+          <h3 id="auth-modal-store-title" class="text-base font-extrabold text-[#050505]">MarketPlaza</h3>
+          <p class="text-[11px] text-[#65676B]">Accede para publicar y comprar artículos</p>
+        </div>
+      </div>
+      <button onclick="closeModal('auth-modal')" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="px-5 border-b border-slate-200 flex gap-4">
+      <button id="auth-tab-login" onclick="switchAuthTab('login')" class="py-2.5 text-sm font-bold border-b-2 border-[#1877F2] text-[#1877F2] transition-colors cursor-pointer">
+        Iniciar Sesión
+      </button>
+      <button id="auth-tab-register" onclick="switchAuthTab('register')" class="py-2.5 text-sm font-bold border-b-2 border-transparent text-[#65676B] hover:text-[#050505] transition-colors cursor-pointer">
+        Registrarse
+      </button>
+    </div>
+
+    <form id="login-form" onsubmit="handleLoginSubmit(event)" class="p-5 space-y-4">
+      <div>
+        <label for="login-email" class="block text-xs font-semibold text-slate-700 mb-1">Correo electrónico</label>
+        <input type="email" id="login-email" required placeholder="tu.correo@ejemplo.com"
+               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none" />
+      </div>
+
+      <div>
+        <label for="login-password" class="block text-xs font-semibold text-slate-700 mb-1">Contraseña</label>
+        <input type="password" id="login-password" required placeholder="••••••••"
+               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none" />
+      </div>
+
+      <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-[#1877F2] hover:bg-[#166FE5] text-white text-sm font-bold shadow-xs transition-all cursor-pointer">
+        Entrar a mi cuenta
+      </button>
+    </form>
+
+    <form id="register-form" onsubmit="handleRegisterSubmit(event)" class="hidden p-5 space-y-4">
+      <div id="registration-disabled-banner" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 font-medium">
+        <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+        El administrador ha pausado temporalmente los nuevos registros.
+      </div>
+
+      <div>
+        <label for="reg-name" class="block text-xs font-semibold text-slate-700 mb-1">Nombre completo</label>
+        <input type="text" id="reg-name" required maxlength="60" placeholder="Ej. María Fernanda López"
+               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none" />
+      </div>
+
+      <div>
+        <label for="reg-email" class="block text-xs font-semibold text-slate-700 mb-1">Correo electrónico</label>
+        <input type="email" id="reg-email" required placeholder="maria@ejemplo.com"
+               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none" />
+      </div>
+
+      <div>
+        <label for="reg-password" class="block text-xs font-semibold text-slate-700 mb-1">Crear contraseña</label>
+        <input type="password" id="reg-password" required minlength="4" placeholder="Mínimo 4 caracteres"
+               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none" />
+      </div>
+
+      <button type="submit" id="btn-submit-register"
+              class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-xs transition-all cursor-pointer">
+        Crear cuenta y continuar
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL 2: PUBLICAR ARTÍCULO -->
+<div id="publish-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4" onclick="closeModalBackdrop(event, 'publish-modal')">
+  <div class="bg-white rounded-2xl max-w-xl w-full overflow-hidden shadow-2xl border border-slate-200 animate-modal max-h-[92vh] flex flex-col">
+    <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+      <div>
+        <h3 class="text-base sm:text-lg font-extrabold text-[#050505]">Publicar nuevo artículo</h3>
+        <p class="text-xs text-[#65676B]">
+          Publicando como <strong id="publish-seller-badge" class="text-[#1877F2]">Usuario</strong>
+        </p>
+      </div>
+      <button onclick="closeModal('publish-modal')" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form onsubmit="handlePublishSubmit(event)" class="overflow-y-auto p-5 space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+          Fotografía del artículo <span class="font-normal text-[#65676B]">(Sube una foto o pega una URL)</span>
+        </label>
+
+        <div class="border-2 border-dashed border-slate-300 hover:border-[#1877F2] rounded-2xl p-4 bg-[#F0F2F5]/60 transition-colors text-center relative">
+          <input type="file" id="pub-image-file" accept="image/*" onchange="handleLocalImageUpload(event)" class="hidden" />
+
+          <div id="upload-placeholder" onclick="document.getElementById('pub-image-file').click()" class="cursor-pointer py-3">
+            <div class="w-11 h-11 rounded-full bg-[#E7F3FF] text-[#1877F2] mx-auto flex items-center justify-center mb-2">
+              <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+            </div>
+            <p class="text-xs sm:text-sm font-semibold text-[#050505]">Haz clic para subir una foto desde tu computadora</p>
+            <p class="text-[11px] text-[#65676B] mt-0.5">JPG, PNG o WEBP (optimizada automáticamente para Oracle)</p>
+          </div>
+
+          <div id="upload-preview-wrapper" class="hidden relative">
+            <img id="upload-preview-img" src="" alt="Vista previa" class="max-h-48 mx-auto rounded-xl object-contain shadow-xs bg-white" />
+            <div class="mt-2.5 flex items-center justify-center gap-2">
+              <button type="button" onclick="document.getElementById('pub-image-file').click()"
+                      class="px-3 py-1 rounded-lg bg-white border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">
+                Cambiar foto
+              </button>
+              <button type="button" onclick="clearUploadedImage()"
+                      class="px-3 py-1 rounded-lg bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700 hover:bg-rose-100 cursor-pointer">
+                Quitar foto
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2">
+          <input type="url" id="pub-image-url" oninput="handleImageUrlPreview(this.value)"
+                 placeholder="O pega aquí una URL externa opcional (https://...)"
+                 class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:border-[#1877F2] outline-none" />
+        </div>
+      </div>
+
+      <div>
+        <label for="pub-title" class="block text-xs font-semibold text-slate-700 mb-1">Título del artículo *</label>
+        <input type="text" id="pub-title" required maxlength="80" placeholder="Ej. iPhone 13 Pro 128GB en caja original"
+               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none" />
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="pub-price" class="block text-xs font-semibold text-slate-700 mb-1">Precio (USD $) *</label>
+          <input type="number" id="pub-price" required min="1" max="999999" step="0.01" placeholder="0.00"
+                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none" />
+        </div>
+
+        <div>
+          <label for="pub-category" class="block text-xs font-semibold text-slate-700 mb-1">Categoría *</label>
+          <select id="pub-category" required
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none">
+            <option value="Electrónica">Electrónica</option>
+            <option value="Muebles">Muebles</option>
+            <option value="Vehículos">Vehículos</option>
+            <option value="Ropa y Accesorios">Ropa y Accesorios</option>
+            <option value="Hogar">Hogar</option>
+            <option value="Deportes">Deportes</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="pub-condition" class="block text-xs font-semibold text-slate-700 mb-1">Estado *</label>
+          <select id="pub-condition" required
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none">
+            <option value="Nuevo">Nuevo</option>
+            <option value="Como nuevo" selected>Como nuevo</option>
+            <option value="Buen estado">Buen estado</option>
+            <option value="Usado">Usado</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="pub-location" class="block text-xs font-semibold text-slate-700 mb-1">Ciudad / Ubicación *</label>
+          <input type="text" id="pub-location" required maxlength="60" placeholder="Ej. Guayaquil, Norte"
+                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none" />
+        </div>
+      </div>
+
+      <div>
+        <label for="pub-description" class="block text-xs font-semibold text-slate-700 mb-1">Descripción *</label>
+        <textarea id="pub-description" required rows="3" maxlength="500"
+                  placeholder="Describe el estado real, accesorios incluidos, tiempo de uso y detalles de entrega..."
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/20 outline-none resize-none"></textarea>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+        <button type="button" onclick="closeModal('publish-modal')"
+                class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors cursor-pointer">
+          Cancelar
+        </button>
+        <button type="submit"
+                class="px-5 py-2.5 rounded-xl bg-[#1877F2] hover:bg-[#166FE5] text-white text-sm font-bold shadow-xs transition-all cursor-pointer">
+          Publicar en Oracle
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL 3: DETALLE DE ARTÍCULO -->
+<div id="detail-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4" onclick="closeModalBackdrop(event, 'detail-modal')">
+  <div class="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 animate-modal max-h-[92vh] flex flex-col">
+    <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+      <span id="det-category" class="px-2.5 py-1 rounded-lg bg-[#E7F3FF] text-[#1877F2] text-xs font-bold">Categoría</span>
+      <button onclick="closeModal('detail-modal')" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="overflow-y-auto p-5 sm:p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div id="det-media-container" class="aspect-square rounded-2xl overflow-hidden bg-[#F0F2F5] border border-slate-200/80 flex items-center justify-center relative"></div>
+
+        <div class="flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex flex-wrap items-center gap-2 mb-2">
+                <span id="det-condition" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Como nuevo
+                </span>
+              <span id="det-sold-pill" class="hidden px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-rose-600 text-white">
+                  VENDIDO
+                </span>
+            </div>
+
+            <h3 id="det-title" class="text-xl font-extrabold text-[#050505] leading-snug">Título</h3>
+            <p id="det-price" class="text-2xl font-extrabold text-[#1877F2] mt-1">$0.00</p>
+
+            <div class="mt-3 space-y-1.5 text-xs text-[#65676B]">
+              <p class="flex items-center gap-1.5">
+                <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                <span id="det-location">Ciudad</span>
+              </p>
+              <p class="flex items-center gap-1.5">
+                <i class="fa-regular fa-clock text-slate-400 w-4 text-center"></i>
+                <span id="det-time">Reciente</span>
+              </p>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-slate-100">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-[#65676B] mb-1">Descripción</h4>
+              <p id="det-description" class="text-sm text-slate-700 leading-relaxed whitespace-pre-line">Descripción</p>
+            </div>
+          </div>
+
+          <div class="bg-[#F0F2F5] rounded-xl p-3 flex items-center gap-3">
+            <div id="det-seller-avatar" class="w-10 h-10 rounded-full bg-[#1877F2] text-white font-bold text-sm flex items-center justify-center shrink-0">U</div>
+            <div class="min-w-0">
+              <p class="text-[11px] text-[#65676B]">Información del vendedor</p>
+              <p id="det-seller-name" class="text-sm font-bold text-[#050505] truncate">Vendedor</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+      <span id="det-footer-note" class="text-xs text-[#65676B]">Transacción protegida en plataforma</span>
+      <div id="det-footer-actions" class="flex items-center gap-2 ml-auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICACIONES TOAST -->
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+<!-- PIE DE PÁGINA -->
+<footer class="bg-white border-t border-slate-200 mt-12 py-5 px-4 text-xs text-[#65676B]">
+  <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+    <p>© 2026 <strong id="footer-store-name" class="text-[#050505]">MarketPlaza</strong> — Tienda de Artículos Usados.</p>
+    <p>Conectado a <strong class="text-[#050505]">Oracle Database 21c XE</strong>.</p>
+  </div>
+</footer>
+
+<!-- JAVASCRIPT CONECTADO AL BACKEND SPRING BOOT + ORACLE -->
+<script>
+  const API_URL = '/api';
+  const SESSION_KEY = 'mp_oracle_session';
+
+  const CATEGORIES = [
+    'Todas',
+    'Electrónica',
+    'Muebles',
+    'Vehículos',
+    'Ropa y Accesorios',
+    'Hogar',
+    'Deportes',
+  ];
+
+  const CONDITIONS = ['Todos', 'Nuevo', 'Como nuevo', 'Buen estado', 'Usado'];
+
+  let appState = {
+    currentView: 'marketplace',
+    activeAdminTab: 'summary',
+    adminListingsFilter: 'all',
+    pendingDeleteProductId: null,
+    uploadedImageDataUrl: '',
+    currentUser: null,
+    config: {
+      storeName: 'MarketPlaza',
+      storeTagline: 'Compra y vende artículos usados cerca de ti',
+      announcementText: '¡Bienvenido a MarketPlaza! Regístrate gratis, publica tus artículos usados y compra cerca de ti.',
+      showAnnouncement: true,
+      commissionRate: 5,
+      allowRegistration: true,
+    },
+    users: [],
+    products: [],
+    filters: {
+      search: '',
+      category: 'Todas',
+      condition: 'Todos',
+      minPrice: '',
+      maxPrice: '',
+      sortBy: 'newest',
+      showSold: true,
+      onlyMine: false,
+    },
+  };
+
+  let categoryChartInstance = null;
+
+  // =========================================================================
+  // SINCRONIZACIÓN CON API SPRING BOOT / ORACLE
+  // =========================================================================
+  async function fetchConfigFromOracle() {
+    try {
+      const res = await fetch(`${API_URL}/configuracion`);
+      if (!res.ok) return;
+      const data = await res.json();
+      appState.config.storeName = data.nombreTienda || 'MarketPlaza';
+      appState.config.announcementText = data.textoBanner || '';
+      appState.config.showAnnouncement = Boolean(data.bannerActivo);
+      appState.config.commissionRate = Number(data.comisionPorcentaje ?? 5);
+      applyConfigToUI();
+    } catch (err) {
+      console.error('Error cargando configuración:', err);
+    }
+  }
+
+  async function fetchProductsFromOracle() {
+    try {
+      const res = await fetch(`${API_URL}/publicaciones`);
+      if (!res.ok) throw new Error('Error en servidor');
+      const list = await res.json();
+      appState.products = list.map((p) => ({
+        id: p.id,
+        sellerId: p.vendedorId,
+        sellerName: p.vendedorNombre || 'Usuario',
+        title: p.titulo,
+        description: p.descripcion,
+        price: Number(p.precio || 0),
+        category: p.categoria,
+        condition: p.condicion,
+        location: p.ubicacion,
+        image: p.imagen || '',
+        status: p.estado === 'VENDIDO' ? 'sold' : 'active',
+        createdAtStr: p.fechaCreacion || 'Reciente',
+      }));
+      renderMarketplace();
+      if (appState.currentView === 'superadmin') renderAdminPanel();
+    } catch (err) {
+      showToast('No se pudo conectar con el servidor Java / Oracle.', 'error');
+    }
+  }
+
+  async function fetchUsersFromOracle() {
+    if (!isAdminLoggedIn()) return;
+    try {
+      const res = await fetch(`${API_URL}/usuarios`);
+      if (!res.ok) return;
+      const list = await res.json();
+      appState.users = list.map((u) => ({
+        id: u.id,
+        name: u.nombre,
+        email: u.email,
+        role: u.rol === 'ADMIN' ? 'admin' : 'user',
+        status: u.activo ? 'Activo' : 'Suspendido',
+        createdAt: u.fechaRegistro || '-',
+      }));
+      if (appState.currentView === 'superadmin') renderAdminPanel();
+    } catch (err) {
+      console.error('Error cargando usuarios:', err);
+    }
+  }
+
+  // =========================================================================
+  // HELPERS
+  // =========================================================================
+  function isAdminLoggedIn() {
+    return Boolean(appState.currentUser && appState.currentUser.role === 'admin');
+  }
+
+  function formatCurrency(val) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(val || 0);
+  }
+
+  function getInitials(name) {
+    return (name || 'U')
+            .split(' ')
+            .slice(0, 2)
+            .map((part) => part[0])
+            .join('')
+            .toUpperCase();
+  }
+
+  function getCategoryPlaceholderVisual(category) {
+    const map = {
+      'Electrónica': { bg: 'from-blue-600 to-indigo-800', icon: 'fa-laptop' },
+      'Muebles': { bg: 'from-amber-600 to-orange-800', icon: 'fa-couch' },
+      'Vehículos': { bg: 'from-slate-700 to-slate-900', icon: 'fa-car' },
+      'Ropa y Accesorios': { bg: 'from-pink-600 to-purple-800', icon: 'fa-shirt' },
+      'Hogar': { bg: 'from-teal-600 to-emerald-800', icon: 'fa-house' },
+      'Deportes': { bg: 'from-emerald-600 to-green-800', icon: 'fa-bicycle' },
+    };
+    return map[category] || { bg: 'from-[#1877F2] to-blue-900', icon: 'fa-tag' };
+  }
+
+  function getConditionBadgeStyle(condition) {
+    switch (condition) {
+      case 'Nuevo': return 'bg-blue-50 text-[#1877F2] border-blue-200';
+      case 'Como nuevo': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'Buen estado': return 'bg-amber-50 text-amber-700 border-amber-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  }
+
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    const styles = {
+      success: 'bg-slate-900 text-white border-emerald-500',
+      info: 'bg-slate-900 text-white border-[#1877F2]',
+      warning: 'bg-amber-950 text-amber-50 border-amber-500',
+      error: 'bg-rose-950 text-rose-50 border-rose-500',
+    };
+    const icons = {
+      success: 'fa-circle-check text-emerald-400',
+      info: 'fa-circle-info text-blue-400',
+      warning: 'fa-triangle-exclamation text-amber-400',
+      error: 'fa-circle-exclamation text-rose-400',
+    };
+
+    toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border-l-4 shadow-lg text-xs sm:text-sm font-medium animate-modal ${styles[type] || styles.info}`;
+    toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span class="flex-1">${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(6px)';
+      toast.style.transition = 'all 0.2s ease';
+      setTimeout(() => toast.remove(), 220);
+    }, 3400);
+  }
+
+  // =========================================================================
+  // AUTENTICACIÓN CON ORACLE
+  // =========================================================================
+  function renderNavbarAuth() {
+    const area = document.getElementById('navbar-auth-area');
+    const onlyMineWrapper = document.getElementById('filter-only-mine-wrapper');
+
+    if (!appState.currentUser) {
+      onlyMineWrapper.classList.add('hidden');
+      onlyMineWrapper.classList.remove('flex');
+      appState.filters.onlyMine = false;
+
+      area.innerHTML = `
+          <button onclick="openAuthModal('login')"
+            class="px-3.5 py-2 rounded-full bg-[#E7F3FF] hover:bg-blue-100 text-[#1877F2] text-xs sm:text-sm font-bold transition-colors cursor-pointer">
+            Iniciar sesión
+          </button>
+          <button onclick="openAuthModal('register')"
+            class="hidden sm:inline-flex px-3.5 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-[#050505] text-xs sm:text-sm font-semibold transition-colors cursor-pointer">
+            Registrarse
+          </button>
+        `;
+      return;
+    }
+
+    onlyMineWrapper.classList.remove('hidden');
+    onlyMineWrapper.classList.add('flex');
+
+    const isAdmin = appState.currentUser.role === 'admin';
+    const inAdminView = appState.currentView === 'superadmin';
+
+    const adminButtonHtml = isAdmin
+            ? `<button onclick="navigateTo('${inAdminView ? 'marketplace' : 'superadmin'}')"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full ${
+                    inAdminView ? 'bg-slate-200 text-[#050505] hover:bg-slate-300' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-xs'
+            } text-xs sm:text-sm font-bold transition-all cursor-pointer">
+            <i class="fa-solid ${inAdminView ? 'fa-store' : 'fa-shield-halved text-blue-400'}"></i>
+            <span>${inAdminView ? 'Ver Tienda' : 'Panel Superadmin'}</span>
+          </button>`
+            : '';
+
+    area.innerHTML = `
+        ${adminButtonHtml}
+        <div class="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-full bg-[#F0F2F5] border border-slate-200/80">
+          <div class="w-7 h-7 rounded-full ${isAdmin ? 'bg-slate-900' : 'bg-[#1877F2]'} text-white text-xs font-bold flex items-center justify-center shrink-0">
+            ${getInitials(appState.currentUser.name)}
+          </div>
+          <span class="text-xs font-bold text-[#050505] max-w-[90px] truncate hidden md:inline">
+            ${appState.currentUser.name}
+          </span>
+          <button onclick="handleLogout()" title="Cerrar sesión"
+            class="px-2.5 py-1 rounded-full bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-[11px] font-semibold border border-slate-200/70 transition-colors cursor-pointer">
+            <i class="fa-solid fa-right-from-bracket sm:mr-1"></i>
+            <span class="hidden sm:inline">Salir</span>
+          </button>
+        </div>
+      `;
+  }
+
+  function openAuthModal(tab = 'login') {
+    switchAuthTab(tab);
+    document.getElementById('auth-modal').classList.remove('hidden');
+  }
+
+  function switchAuthTab(tab) {
+    const loginForm = document.getElementById('login-form');
+    const regForm = document.getElementById('register-form');
+    const tabLogin = document.getElementById('auth-tab-login');
+    const tabReg = document.getElementById('auth-tab-register');
+
+    if (tab === 'login') {
+      loginForm.classList.remove('hidden');
+      regForm.classList.add('hidden');
+      tabLogin.className = 'py-2.5 text-sm font-bold border-b-2 border-[#1877F2] text-[#1877F2] transition-colors cursor-pointer';
+      tabReg.className = 'py-2.5 text-sm font-bold border-b-2 border-transparent text-[#65676B] hover:text-[#050505] transition-colors cursor-pointer';
+    } else {
+      loginForm.classList.add('hidden');
+      regForm.classList.remove('hidden');
+      tabReg.className = 'py-2.5 text-sm font-bold border-b-2 border-[#1877F2] text-[#1877F2] transition-colors cursor-pointer';
+      tabLogin.className = 'py-2.5 text-sm font-bold border-b-2 border-transparent text-[#65676B] hover:text-[#050505] transition-colors cursor-pointer';
+
+      const disabledBanner = document.getElementById('registration-disabled-banner');
+      const submitRegBtn = document.getElementById('btn-submit-register');
+      disabledBanner.classList.toggle('hidden', appState.config.allowRegistration);
+      submitRegBtn.disabled = !appState.config.allowRegistration;
+      submitRegBtn.classList.toggle('opacity-50', !appState.config.allowRegistration);
+    }
+  }
+
+  async function handleLoginSubmit(event) {
+    event.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    try {
+      const res = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast(data.error || 'Correo o contraseña incorrectos.', 'error');
+        return;
+      }
+
+      appState.currentUser = {
+        id: data.id,
+        name: data.nombre,
+        email: data.email,
+        role: data.rol === 'ADMIN' ? 'admin' : 'user',
+        status: data.activo ? 'Activo' : 'Suspendido',
+      };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(appState.currentUser));
+
+      closeModal('auth-modal');
+      event.target.reset();
+      renderNavbarAuth();
+      renderMarketplace();
+
+      if (appState.currentUser.role === 'admin') {
+        await fetchUsersFromOracle();
+        showToast('Bienvenido, Superadmin.', 'success');
+      } else {
+        showToast(`¡Hola, ${appState.currentUser.name}!`, 'success');
+      }
+    } catch (err) {
+      showToast('Error al conectar con el servidor.', 'error');
+    }
+  }
+
+  async function handleRegisterSubmit(event) {
+    event.preventDefault();
+    if (!appState.config.allowRegistration) return;
+
+    const nombre = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+
+    try {
+      const res = await fetch(`${API_URL}/usuarios`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast(data.error || 'No se pudo crear la cuenta.', 'warning');
+        return;
+      }
+
+      appState.currentUser = {
+        id: data.id,
+        name: data.nombre,
+        email: data.email,
+        role: data.rol === 'ADMIN' ? 'admin' : 'user',
+        status: 'Activo',
+      };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(appState.currentUser));
+
+      closeModal('auth-modal');
+      event.target.reset();
+      renderNavbarAuth();
+      renderMarketplace();
+      showToast(`¡Cuenta creada en Oracle! Bienvenido/a, ${appState.currentUser.name}.`, 'success');
+    } catch (err) {
+      showToast('Error al registrar usuario en Oracle.', 'error');
+    }
+  }
+
+  function handleLogout() {
+    appState.currentUser = null;
+    appState.filters.onlyMine = false;
+    localStorage.removeItem(SESSION_KEY);
+    navigateTo('marketplace');
+    renderNavbarAuth();
+    showToast('Has cerrado sesión correctamente.', 'info');
+  }
+
+  // =========================================================================
+  // NAVEGACIÓN ENTRE VISTAS
+  // =========================================================================
+  async function navigateTo(view) {
+    if (view === 'superadmin' && !isAdminLoggedIn()) {
+      appState.currentView = 'marketplace';
+      document.getElementById('view-superadmin').classList.add('hidden');
+      document.getElementById('view-marketplace').classList.remove('hidden');
+      document.getElementById('header-search-container').classList.remove('hidden');
+      renderNavbarAuth();
+      return;
+    }
+
+    appState.currentView = view;
+    const viewMarket = document.getElementById('view-marketplace');
+    const viewAdmin = document.getElementById('view-superadmin');
+    const searchBox = document.getElementById('header-search-container');
+
+    if (view === 'superadmin') {
+      viewMarket.classList.add('hidden');
+      viewAdmin.classList.remove('hidden');
+      searchBox.classList.add('hidden');
+      renderNavbarAuth();
+      await fetchUsersFromOracle();
+      renderAdminPanel();
+    } else {
+      viewAdmin.classList.add('hidden');
+      viewMarket.classList.remove('hidden');
+      searchBox.classList.remove('hidden');
+      renderNavbarAuth();
+      renderMarketplace();
+    }
+  }
+
+  // =========================================================================
+  // PUBLICACIÓN DE ARTÍCULOS EN ORACLE
+  // =========================================================================
+  function handlePublishClick() {
+    if (!appState.currentUser) {
+      showToast('Inicia sesión o regístrate para publicar un artículo.', 'info');
+      openAuthModal('login');
+      return;
+    }
+    document.getElementById('publish-seller-badge').textContent = appState.currentUser.name;
+    clearUploadedImage();
+    document.getElementById('publish-modal').classList.remove('hidden');
+  }
+
+  function handleLocalImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = new Image();
+      img.onload = function () {
+        const maxDim = 360;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+        let quality = 0.65;
+        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+        while (dataUrl.length > 3800 && quality > 0.2) {
+          quality -= 0.15;
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+
+        appState.uploadedImageDataUrl = dataUrl;
+        document.getElementById('pub-image-url').value = '';
+        document.getElementById('upload-preview-img').src = dataUrl;
+        document.getElementById('upload-placeholder').classList.add('hidden');
+        document.getElementById('upload-preview-wrapper').classList.remove('hidden');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleImageUrlPreview(url) {
+    const trimmed = url.trim();
+    if (!trimmed) {
+      if (!appState.uploadedImageDataUrl) clearUploadedImage();
+      return;
+    }
+    appState.uploadedImageDataUrl = '';
+    document.getElementById('pub-image-file').value = '';
+    document.getElementById('upload-preview-img').src = trimmed;
+    document.getElementById('upload-placeholder').classList.add('hidden');
+    document.getElementById('upload-preview-wrapper').classList.remove('hidden');
+  }
+
+  function clearUploadedImage() {
+    appState.uploadedImageDataUrl = '';
+    const fileInput = document.getElementById('pub-image-file');
+    const urlInput = document.getElementById('pub-image-url');
+    if (fileInput) fileInput.value = '';
+    if (urlInput) urlInput.value = '';
+    document.getElementById('upload-preview-img').src = '';
+    document.getElementById('upload-placeholder').classList.remove('hidden');
+    document.getElementById('upload-preview-wrapper').classList.add('hidden');
+  }
+
+  async function handlePublishSubmit(event) {
+    event.preventDefault();
+    if (!appState.currentUser) return;
+
+    const payload = {
+      vendedorId: appState.currentUser.id,
+      titulo: document.getElementById('pub-title').value.trim(),
+      precio: parseFloat(document.getElementById('pub-price').value),
+      categoria: document.getElementById('pub-category').value,
+      condicion: document.getElementById('pub-condition').value,
+      ubicacion: document.getElementById('pub-location').value.trim(),
+      descripcion: document.getElementById('pub-description').value.trim(),
+      imagen: appState.uploadedImageDataUrl || document.getElementById('pub-image-url').value.trim() || '',
+    };
+
+    try {
+      const res = await fetch(`${API_URL}/publicaciones`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        showToast('Error al guardar el artículo en Oracle.', 'error');
+        return;
+      }
+
+      event.target.reset();
+      clearUploadedImage();
+      closeModal('publish-modal');
+      await fetchProductsFromOracle();
+      showToast(`¡Artículo "${payload.titulo}" guardado en Oracle!`, 'success');
+    } catch (err) {
+      showToast('Error de conexión con el servidor.', 'error');
+    }
+  }
+
+  // =========================================================================
+  // RENDERIZADO DEL MARKETPLACE
+  // =========================================================================
+  function renderSidebarFilters() {
+    const catContainer = document.getElementById('category-filter-list');
+    catContainer.innerHTML = CATEGORIES.map((cat) => {
+      const active = appState.filters.category === cat;
+      const count = cat === 'Todas'
+              ? appState.products.length
+              : appState.products.filter((p) => p.category === cat).length;
+
+      return `
+          <button onclick="setCategoryFilter('${cat}')"
+            class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all cursor-pointer ${
+              active ? 'bg-[#E7F3FF] text-[#1877F2] font-bold' : 'bg-[#F0F2F5] lg:bg-transparent text-[#050505] hover:bg-slate-100'
+      }">
+            <span>${cat}</span>
+            <span class="text-[11px] px-2 py-0.5 rounded-full ${active ? 'bg-[#1877F2] text-white' : 'bg-slate-200/80 text-[#65676B]'}">${count}</span>
+          </button>
+        `;
+    }).join('');
+
+    const condContainer = document.getElementById('condition-filter-list');
+    condContainer.innerHTML = CONDITIONS.map((cond) => {
+      const active = appState.filters.condition === cond;
+      return `
+          <button onclick="setConditionFilter('${cond}')"
+            class="flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+              active ? 'bg-[#050505] text-white font-semibold' : 'bg-[#F0F2F5] lg:bg-transparent text-slate-700 hover:bg-slate-100'
+      }">
+            <span>${cond}</span>
+            ${active ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+          </button>
+        `;
+    }).join('');
+  }
+
+  function getFilteredProducts() {
+    const query = appState.filters.search.trim().toLowerCase();
+    const minP = appState.filters.minPrice !== '' ? parseFloat(appState.filters.minPrice) : null;
+    const maxP = appState.filters.maxPrice !== '' ? parseFloat(appState.filters.maxPrice) : null;
+
+    let list = appState.products.filter((item) => {
+      if (!appState.filters.showSold && item.status === 'sold') return false;
+      if (appState.filters.onlyMine && appState.currentUser && item.sellerId !== appState.currentUser.id) return false;
+      if (appState.filters.category !== 'Todas' && item.category !== appState.filters.category) return false;
+      if (appState.filters.condition !== 'Todos' && item.condition !== appState.filters.condition) return false;
+      if (minP !== null && !isNaN(minP) && item.price < minP) return false;
+      if (maxP !== null && !isNaN(maxP) && item.price > maxP) return false;
+
+      if (query) {
+        const text = `${item.title} ${item.description} ${item.location} ${item.category} ${item.sellerName}`.toLowerCase();
+        if (!text.includes(query)) return false;
+      }
+      return true;
+    });
+
+    if (appState.filters.sortBy === 'price-asc') {
+      list.sort((a, b) => a.price - b.price);
+    } else if (appState.filters.sortBy === 'price-desc') {
+      list.sort((a, b) => b.price - a.price);
+    } else {
+      list.sort((a, b) => b.id - a.id);
+    }
+
+    return list;
+  }
+
+  function renderCardVisual(product) {
+    const placeholder = getCategoryPlaceholderVisual(product.category);
+    if (product.image) {
+      return `
+          <img src="${product.image}" alt="${product.title}"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <div style="display:none" class="w-full h-full bg-gradient-to-br ${placeholder.bg} flex-col items-center justify-center text-white p-4">
+            <i class="fa-solid ${placeholder.icon} text-4xl opacity-90"></i>
+            <span class="text-[11px] font-semibold uppercase tracking-wider mt-2 opacity-80">${product.category}</span>
+          </div>
+        `;
+    }
+    return `
+        <div class="w-full h-full bg-gradient-to-br ${placeholder.bg} flex flex-col items-center justify-center text-white p-4 group-hover:scale-105 transition-transform duration-300">
+          <i class="fa-solid ${placeholder.icon} text-4xl opacity-90"></i>
+          <span class="text-[11px] font-semibold uppercase tracking-wider mt-2 opacity-80">${product.category}</span>
+        </div>
+      `;
+  }
+
+  function renderMarketplace() {
+    renderSidebarFilters();
+
+    const grid = document.getElementById('products-grid');
+    const zeroState = document.getElementById('marketplace-zero-state');
+    const noResultsState = document.getElementById('marketplace-no-results-state');
+    const titleEl = document.getElementById('catalog-title');
+    const subtitleEl = document.getElementById('catalog-subtitle');
+
+    titleEl.textContent = appState.filters.category === 'Todas'
+            ? 'Sugerencias de hoy'
+            : `Categoría: ${appState.filters.category}`;
+
+    if (appState.products.length === 0) {
+      grid.innerHTML = '';
+      noResultsState.classList.add('hidden');
+      zeroState.classList.remove('hidden');
+      subtitleEl.textContent = '0 publicaciones disponibles';
+      return;
+    }
+
+    zeroState.classList.add('hidden');
+    const filtered = getFilteredProducts();
+    subtitleEl.textContent = `${filtered.length} ${filtered.length === 1 ? 'publicación disponible' : 'publicaciones disponibles'}`;
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '';
+      noResultsState.classList.remove('hidden');
+      return;
+    }
+
+    noResultsState.classList.add('hidden');
+    grid.innerHTML = filtered.map((product) => {
+      const isSold = product.status === 'sold';
+      const isMine = appState.currentUser && appState.currentUser.id === product.sellerId;
+
+      return `
+          <article onclick="openDetailModal(${product.id})"
+            class="group bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-md hover:border-[#1877F2]/50 transition-all cursor-pointer flex flex-col">
+            <div class="relative aspect-[16/11] bg-[#F0F2F5] overflow-hidden">
+              ${renderCardVisual(product)}
+
+              <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-lg text-[11px] font-bold border bg-white/95 backdrop-blur-xs shadow-xs ${getConditionBadgeStyle(product.condition)}">
+                ${product.condition}
+              </span>
+
+              ${isMine ? `<span class="absolute top-3 right-3 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#1877F2] text-white shadow-xs">Tu artículo</span>` : ''}
+
+              ${isSold ? `<div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center">
+                <span class="px-4 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-extrabold uppercase tracking-widest shadow-lg border border-rose-400">VENDIDO</span>
+              </div>` : ''}
+            </div>
+
+            <div class="p-4 flex-1 flex flex-col justify-between">
+              <div>
+                <div class="flex items-baseline justify-between gap-2 mb-1">
+                  <span class="text-lg font-extrabold ${isSold ? 'text-slate-400 line-through' : 'text-[#050505]'}">
+                    ${formatCurrency(product.price)}
+                  </span>
+                  <span class="text-[11px] font-semibold text-[#65676B]">${product.category}</span>
+                </div>
+
+                <h3 class="text-sm font-bold text-[#050505] group-hover:text-[#1877F2] transition-colors line-clamp-1">
+                  ${product.title}
+                </h3>
+
+                <p class="text-xs text-[#65676B] mt-1 flex items-center gap-1 truncate">
+                  <i class="fa-solid fa-location-dot text-slate-400"></i>
+                  <span>${product.location}</span>
+                </p>
+              </div>
+
+              <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-[#65676B]">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="w-5 h-5 rounded-full bg-[#E7F3FF] text-[#1877F2] font-bold text-[10px] flex items-center justify-center shrink-0">
+                    ${getInitials(product.sellerName)}
+                  </span>
+                  <span class="truncate font-semibold text-slate-700">${product.sellerName}</span>
+                </div>
+                <span class="shrink-0">${product.createdAtStr}</span>
+              </div>
+            </div>
+          </article>
+        `;
+    }).join('');
+  }
+
+  function syncSearchInputs(val) {
+    appState.filters.search = val;
+    document.getElementById('top-search-input').value = val;
+    document.getElementById('sidebar-search-input').value = val;
+    document.getElementById('top-clear-search').classList.toggle('hidden', val.trim().length === 0);
+    renderMarketplace();
+  }
+
+  function updatePriceFilter() {
+    appState.filters.minPrice = document.getElementById('filter-min-price').value;
+    appState.filters.maxPrice = document.getElementById('filter-max-price').value;
+    renderMarketplace();
+  }
+
+  function setCategoryFilter(cat) {
+    appState.filters.category = cat;
+    renderMarketplace();
+  }
+
+  function setConditionFilter(cond) {
+    appState.filters.condition = cond;
+    renderMarketplace();
+  }
+
+  function toggleShowSold(checked) {
+    appState.filters.showSold = checked;
+    renderMarketplace();
+  }
+
+  function toggleOnlyMine(checked) {
+    appState.filters.onlyMine = checked;
+    renderMarketplace();
+  }
+
+  function changeSortOrder(sortVal) {
+    appState.filters.sortBy = sortVal;
+    renderMarketplace();
+  }
+
+  function clearAllFilters() {
+    appState.filters = {
+      search: '',
+      category: 'Todas',
+      condition: 'Todos',
+      minPrice: '',
+      maxPrice: '',
+      sortBy: 'newest',
+      showSold: true,
+      onlyMine: false,
+    };
+    document.getElementById('top-search-input').value = '';
+    document.getElementById('sidebar-search-input').value = '';
+    document.getElementById('top-clear-search').classList.add('hidden');
+    document.getElementById('filter-min-price').value = '';
+    document.getElementById('filter-max-price').value = '';
+    document.getElementById('sort-products-select').value = 'newest';
+    document.getElementById('filter-show-sold').checked = true;
+    document.getElementById('filter-only-mine').checked = false;
+    renderMarketplace();
+  }
+
+  // =========================================================================
+  // DETALLE Y COMPRA / VENTA
+  // =========================================================================
+  function openDetailModal(productId) {
+    const product = appState.products.find((p) => p.id === productId);
+    if (!product) return;
+
+    const isSold = product.status === 'sold';
+    const isOwner = appState.currentUser && appState.currentUser.id === product.sellerId;
+
+    document.getElementById('det-category').textContent = product.category;
+    document.getElementById('det-title').textContent = product.title;
+    document.getElementById('det-price').textContent = formatCurrency(product.price);
+    document.getElementById('det-location').textContent = product.location;
+    document.getElementById('det-time').textContent = `Publicado: ${product.createdAtStr}`;
+    document.getElementById('det-description').textContent = product.description;
+
+    const condBadge = document.getElementById('det-condition');
+    condBadge.textContent = product.condition;
+    condBadge.className = `px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getConditionBadgeStyle(product.condition)}`;
+
+    document.getElementById('det-sold-pill').classList.toggle('hidden', !isSold);
+    document.getElementById('det-seller-avatar').textContent = getInitials(product.sellerName);
+    document.getElementById('det-seller-name').textContent = product.sellerName;
+    document.getElementById('det-media-container').innerHTML = renderCardVisual(product);
+
+    const footerNote = document.getElementById('det-footer-note');
+    const footerActions = document.getElementById('det-footer-actions');
+
+    if (isSold) {
+      footerNote.textContent = 'Este artículo ya fue vendido.';
+      footerActions.innerHTML = `<button onclick="closeModal('detail-modal')" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-sm font-semibold cursor-pointer">Cerrar</button>`;
+    } else if (isOwner) {
+      footerNote.textContent = 'Esta es tu publicación activa.';
+      footerActions.innerHTML = `
+          <button onclick="closeModal('detail-modal')" class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold cursor-pointer">Cerrar</button>
+          <button onclick="completePurchaseOrMarkSold(${product.id})" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-xs cursor-pointer">
+            <i class="fa-solid fa-check mr-1"></i> Marcar como vendido
+          </button>
+        `;
+    } else {
+      footerNote.textContent = appState.currentUser ? `Comprando como ${appState.currentUser.name}` : 'Inicia sesión para concretar la compra';
+      footerActions.innerHTML = `
+          <button onclick="closeModal('detail-modal')" class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold cursor-pointer">Cerrar</button>
+          <button onclick="completePurchaseOrMarkSold(${product.id})" class="px-5 py-2 rounded-xl bg-[#1877F2] hover:bg-[#166FE5] text-white text-xs sm:text-sm font-bold shadow-xs cursor-pointer">
+            <i class="fa-solid fa-bag-shopping mr-1.5"></i> Comprar artículo
+          </button>
+        `;
+    }
+
+    document.getElementById('detail-modal').classList.remove('hidden');
+  }
+
+  async function completePurchaseOrMarkSold(productId) {
+    if (!appState.currentUser) {
+      closeModal('detail-modal');
+      showToast('Inicia sesión o regístrate para comprar este artículo.', 'info');
+      openAuthModal('login');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/publicaciones/${productId}/vender`, { method: 'PATCH' });
+      if (!res.ok) throw new Error();
+      closeModal('detail-modal');
+      await fetchProductsFromOracle();
+      showToast('¡Operación completada y guardada en Oracle!', 'success');
+    } catch (err) {
+      showToast('No se pudo actualizar el estado en Oracle.', 'error');
+    }
+  }
+
+  // =========================================================================
+  // PANEL SUPERADMINISTRADOR
+  // =========================================================================
+  function switchAdminTab(tab) {
+    if (!isAdminLoggedIn()) return;
+    appState.activeAdminTab = tab;
+
+    ['summary', 'users', 'listings', 'settings'].forEach((t) => {
+      const panel = document.getElementById(`admin-panel-${t}`);
+      const btn = document.getElementById(`admin-tab-btn-${t}`);
+      if (t === tab) {
+        panel.classList.remove('hidden');
+        btn.className = 'px-3.5 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-[#1877F2] text-[#1877F2] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5';
+      } else {
+        panel.classList.add('hidden');
+        btn.className = 'px-3.5 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-[#65676B] hover:text-[#050505] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5';
+      }
+    });
+
+    if (tab === 'summary') renderCategoryChart();
+    if (tab === 'settings') populateSettingsInputs();
+  }
+
+  function renderAdminPanel() {
+    if (!isAdminLoggedIn()) return;
+
+    const totalUsers = appState.users.length;
+    const activeUsers = appState.users.filter((u) => u.status === 'Activo').length;
+    const activeListings = appState.products.filter((p) => p.status === 'active');
+    const soldListings = appState.products.filter((p) => p.status === 'sold');
+    const totalListings = appState.products.length;
+
+    const activeCatalogValue = activeListings.reduce((sum, p) => sum + p.price, 0);
+    const grossSalesVolume = soldListings.reduce((sum, p) => sum + p.price, 0);
+    const commissionRate = appState.config.commissionRate;
+    const netProfit = grossSalesVolume * (commissionRate / 100);
+    const conversionPct = totalListings > 0 ? (soldListings.length / totalListings) * 100 : 0;
+
+    document.getElementById('kpi-users-total').textContent = totalUsers;
+    document.getElementById('kpi-users-active').textContent = `${activeUsers} activo(s)`;
+    document.getElementById('kpi-listings-active').textContent = activeListings.length;
+    document.getElementById('kpi-listings-total').textContent = `de ${totalListings} totales`;
+    document.getElementById('kpi-listings-value').textContent = `Valor activo en catálogo: ${formatCurrency(activeCatalogValue)}`;
+    document.getElementById('kpi-sold-total').textContent = soldListings.length;
+    document.getElementById('kpi-sold-gmv').textContent = `Volumen bruto vendido: ${formatCurrency(grossSalesVolume)}`;
+    document.getElementById('kpi-margin-net').textContent = formatCurrency(netProfit);
+    document.getElementById('kpi-conversion-pct').textContent = `${conversionPct.toFixed(1)}% conv.`;
+    document.getElementById('kpi-margin-rate-label').textContent = `Comisión configurada: ${commissionRate}%`;
+
+    document.getElementById('summary-conversion-rate').textContent = `${conversionPct.toFixed(1)}% (${soldListings.length}/${totalListings})`;
+    document.getElementById('summary-gross-volume').textContent = formatCurrency(grossSalesVolume);
+    document.getElementById('summary-commission-pct').textContent = `${commissionRate}%`;
+    document.getElementById('summary-net-profit').textContent = formatCurrency(netProfit);
+
+    renderCategoryChart();
+    renderAdminUsersTable();
+    renderAdminListingsTable();
+    populateSettingsInputs();
+  }
+
+  function renderCategoryChart() {
+    const canvas = document.getElementById('category-performance-chart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const realCategories = CATEGORIES.filter((c) => c !== 'Todas');
+    const activeCounts = realCategories.map((cat) => appState.products.filter((p) => p.category === cat && p.status === 'active').length);
+    const soldCounts = realCategories.map((cat) => appState.products.filter((p) => p.category === cat && p.status === 'sold').length);
+
+    if (categoryChartInstance) categoryChartInstance.destroy();
+
+    categoryChartInstance = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: realCategories,
+        datasets: [
+          { label: 'Publicaciones Activas', data: activeCounts, backgroundColor: '#1877F2', borderRadius: 6 },
+          { label: 'Artículos Vendidos', data: soldCounts, backgroundColor: '#10B981', borderRadius: 6 },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
+          x: { grid: { display: false } },
+        },
+      },
+    });
+  }
+
+  function renderAdminUsersTable() {
+    const tbody = document.getElementById('admin-users-table-body');
+    tbody.innerHTML = appState.users.map((user) => {
+      const isAdmin = user.role === 'admin';
+      const isActive = user.status === 'Activo';
+      const postCount = appState.products.filter((p) => p.sellerId === user.id).length;
+
+      return `
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="py-3.5 px-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full ${isAdmin ? 'bg-slate-900' : 'bg-[#1877F2]'} text-white text-xs font-bold flex items-center justify-center shrink-0">
+                  ${getInitials(user.name)}
+                </div>
+                <div>
+                  <p class="font-bold text-[#050505] text-xs sm:text-sm">${user.name}</p>
+                  <p class="text-[11px] text-[#65676B]">Alta: ${user.createdAt}</p>
+                </div>
+              </div>
+            </td>
+            <td class="py-3.5 px-4 text-xs sm:text-sm text-slate-600">${user.email}</td>
+            <td class="py-3.5 px-4">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${isAdmin ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700'}">
+                ${isAdmin ? 'Superadmin' : 'Usuario'}
+              </span>
+            </td>
+            <td class="py-3.5 px-4 text-center font-bold text-[#050505] text-xs sm:text-sm">${postCount}</td>
+            <td class="py-3.5 px-4">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+                <span class="w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                ${user.status}
+              </span>
+            </td>
+            <td class="py-3.5 px-4 text-right">
+              ${isAdmin ? '<span class="text-xs text-slate-400 italic">Cuenta maestra</span>' : `
+                <button onclick="toggleUserSuspension(${user.id})"
+                  class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${isActive ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100' : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}">
+                  ${isActive ? 'Suspender' : 'Reactivar'}
+                </button>`}
+            </td>
+          </tr>
+        `;
+    }).join('');
+  }
+
+  async function toggleUserSuspension(userId) {
+    if (!isAdminLoggedIn()) return;
+    await fetch(`${API_URL}/usuarios/${userId}/estado`, { method: 'PATCH' });
+    await fetchUsersFromOracle();
+    showToast('Estado del usuario actualizado en Oracle.', 'success');
+  }
+
+  function setAdminListingsFilter(filter) {
+    appState.adminListingsFilter = filter;
+    appState.pendingDeleteProductId = null;
+
+    ['all', 'active', 'sold'].forEach((f) => {
+      const btn = document.getElementById(`mod-filter-${f}`);
+      btn.className = f === filter
+              ? 'px-3 py-1 rounded-lg text-xs font-semibold bg-white text-[#050505] shadow-xs cursor-pointer'
+              : 'px-3 py-1 rounded-lg text-xs font-semibold text-[#65676B] hover:text-[#050505] cursor-pointer';
+    });
+    renderAdminListingsTable();
+  }
+
+  function renderAdminListingsTable() {
+    const tbody = document.getElementById('admin-listings-table-body');
+    let list = appState.products;
+    if (appState.adminListingsFilter === 'active') list = list.filter((p) => p.status === 'active');
+    if (appState.adminListingsFilter === 'sold') list = list.filter((p) => p.status === 'sold');
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-xs sm:text-sm text-[#65676B]">No hay publicaciones registradas en esta vista.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map((item) => {
+      const isSold = item.status === 'sold';
+      const estCommission = item.price * (appState.config.commissionRate / 100);
+      const isConfirming = appState.pendingDeleteProductId === item.id;
+
+      return `
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="py-3.5 px-4">
+              <div class="max-w-xs">
+                <p class="font-bold text-[#050505] text-xs sm:text-sm truncate">${item.title}</p>
+                <p class="text-[11px] text-[#65676B]">${item.category} • ${item.location}</p>
+              </div>
+            </td>
+            <td class="py-3.5 px-4 text-xs text-slate-700 font-medium">${item.sellerName}</td>
+            <td class="py-3.5 px-4 font-bold text-[#050505] text-xs sm:text-sm">${formatCurrency(item.price)}</td>
+            <td class="py-3.5 px-4 text-xs font-semibold text-indigo-600">${formatCurrency(estCommission)}</td>
+            <td class="py-3.5 px-4">
+              ${isSold
+              ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Vendido</span>'
+              : '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E7F3FF] text-[#1877F2]">Activo</span>'}
+            </td>
+            <td class="py-3.5 px-4 text-right">
+              <div class="inline-flex items-center justify-end gap-1.5">
+                ${!isSold ? `<button onclick="adminMarkListingSold(${item.id})" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold cursor-pointer">Marcar vendido</button>` : ''}
+                ${isConfirming ? `
+                  <button onclick="executeDeleteListing(${item.id})" class="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold cursor-pointer">Confirmar</button>
+                  <button onclick="appState.pendingDeleteProductId=null; renderAdminListingsTable()" class="px-2 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold cursor-pointer">No</button>
+                ` : `<button onclick="appState.pendingDeleteProductId=${item.id}; renderAdminListingsTable()" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold cursor-pointer">Eliminar</button>`}
+              </div>
+            </td>
+          </tr>
+        `;
+    }).join('');
+  }
+
+  async function adminMarkListingSold(productId) {
+    if (!isAdminLoggedIn()) return;
+    await fetch(`${API_URL}/publicaciones/${productId}/vender`, { method: 'PATCH' });
+    await fetchProductsFromOracle();
+    showToast('Artículo marcado como vendido en Oracle.', 'success');
+  }
+
+  async function executeDeleteListing(productId) {
+    if (!isAdminLoggedIn()) return;
+    await fetch(`${API_URL}/publicaciones/${productId}`, { method: 'DELETE' });
+    appState.pendingDeleteProductId = null;
+    await fetchProductsFromOracle();
+    showToast('Publicación eliminada de Oracle.', 'info');
+  }
+
+  // =========================================================================
+  // CONFIGURACIÓN DE LA TIENDA
+  // =========================================================================
+  function applyConfigToUI() {
+    const { storeName, storeTagline, announcementText, showAnnouncement } = appState.config;
+    document.getElementById('header-store-name').textContent = storeName;
+    document.getElementById('header-store-tagline').textContent = storeTagline;
+    document.getElementById('footer-store-name').textContent = storeName;
+    document.getElementById('admin-header-store-name').textContent = storeName;
+    document.getElementById('auth-modal-store-title').textContent = storeName;
+    document.title = `${storeName} - Marketplace de Artículos Usados`;
+
+    const topBar = document.getElementById('top-announcement-bar');
+    document.getElementById('announcement-text').textContent = announcementText;
+    topBar.classList.toggle('hidden', !(showAnnouncement && announcementText.trim().length > 0));
+  }
+
+  function populateSettingsInputs() {
+    document.getElementById('set-store-name').value = appState.config.storeName;
+    document.getElementById('set-store-tagline').value = appState.config.storeTagline;
+    document.getElementById('set-commission-rate').value = appState.config.commissionRate;
+    document.getElementById('set-commission-badge').textContent = `${appState.config.commissionRate}%`;
+    document.getElementById('set-announcement-text').value = appState.config.announcementText;
+    document.getElementById('set-show-announcement').checked = appState.config.showAnnouncement;
+    document.getElementById('set-allow-registration').checked = appState.config.allowRegistration;
+  }
+
+  async function handleSaveSettings(event) {
+    event.preventDefault();
+    if (!isAdminLoggedIn()) return;
+
+    const nombreTienda = document.getElementById('set-store-name').value.trim();
+    const textoBanner = document.getElementById('set-announcement-text').value.trim();
+    const bannerActivo = document.getElementById('set-show-announcement').checked;
+    const comisionPorcentaje = parseFloat(document.getElementById('set-commission-rate').value);
+
+    appState.config.storeTagline = document.getElementById('set-store-tagline').value.trim();
+    appState.config.allowRegistration = document.getElementById('set-allow-registration').checked;
+
+    try {
+      const res = await fetch(`${API_URL}/configuracion`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombreTienda, textoBanner, bannerActivo, comisionPorcentaje }),
+      });
+
+      if (!res.ok) throw new Error();
+      await fetchConfigFromOracle();
+      renderAdminPanel();
+      showToast('Configuración guardada en Oracle.', 'success');
+    } catch (err) {
+      showToast('Error al guardar configuración.', 'error');
+    }
+  }
+
+  function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+  }
+
+  function closeModalBackdrop(event, modalId) {
+    if (event.target.id === modalId) closeModal(modalId);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal('auth-modal');
+      closeModal('publish-modal');
+      closeModal('detail-modal');
+    }
+  });
+
+  // =========================================================================
+  // INICIALIZACIÓN
+  // =========================================================================
+  window.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const saved = localStorage.getItem(SESSION_KEY);
+      if (saved) appState.currentUser = JSON.parse(saved);
+    } catch (e) {}
+
+    renderNavbarAuth();
+    await fetchConfigFromOracle();
+    await fetchProductsFromOracle();
+    if (isAdminLoggedIn()) {
+      await fetchUsersFromOracle();
+    }
+  });
+</script>
+</body>
+</html>
